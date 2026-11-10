@@ -1,7 +1,7 @@
 import { test, expect, type Page } from '@playwright/test';
 async function records(page: Page) {
   return page.evaluate(async () => {
-    const r = indexedDB.open('papyrus');
+    const r = indexedDB.open(localStorage.getItem('papyrus-active-database') || 'papyrus');
     const d = await new Promise<IDBDatabase>((resolve) => (r.onsuccess = () => resolve(r.result)));
     const q = d.transaction('events').objectStore('events').getAll();
     const result = await new Promise<

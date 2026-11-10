@@ -15,9 +15,13 @@ Not yet executed on physical hardware. Desktop Chromium mobile emulation cannot 
 - [ ] Test left/right nursing, simultaneous sides, pause/resume, editing nursing segments.
 - [ ] Log and edit a mixed diaper with independent amounts, color, consistency, notes and local photo.
 - [ ] Import the real Huckleberry export with source timezone confirmation; audit all source rows.
-- [ ] Download JSON with photos through Safari's Files/share behavior; restore merge and replacement offline.
+- [ ] Export JSON and a photo-containing ZIP through Files/share; independently Test Backup, then restore merge and replacement offline.
 - [ ] Navigate all lazy-loaded screens and CSV worker in airplane mode.
 - [ ] Check narrow iPhone SE layout, large text, portrait/landscape and dark appearance.
 - [ ] VoiceOver: navigation names, form labels, chart alternatives, modal focus/escape/dismissal.
 - [ ] Confirm notifications fail gracefully when unavailable or denied; in-app reminders stay useful.
 - [ ] Test low storage and explain that app removal/browser cleanup may delete local records; retain an external backup.
+
+- [ ] Retain an external backup, clear site data, reopen/reinstall, restore without creating a fake child, and verify exact records.
+- [ ] Restore an unfinished timer; verify review is required and no end time is fabricated.
+- [ ] Confirm user-reported Files save and independently tested file are labeled differently.

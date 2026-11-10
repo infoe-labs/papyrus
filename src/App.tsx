@@ -1,3 +1,6 @@
+import { recoverInterruptedCutover } from './backup/restore';
+import { BackupLifecycle } from './backup/components/BackupLifecycle';
+import { DataSafetyNotice } from './backup/components/DataSafetyNotice';
 import {
   Component,
   lazy,
@@ -8,7 +11,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import { HashRouter, NavLink, Route, Routes, Link } from 'react-router-dom';
+import { HashRouter, NavLink, Route, Routes, Link, useLocation } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 import {
@@ -47,20 +50,59 @@ const nav = [
   { to: '/settings', label: 'Settings', icon: Settings2 },
 ];
 export default function App() {
+  const [generation, setGeneration] = useState(0);
+  useEffect(() => {
+    const changed = () => setGeneration((n) => n + 1);
+    const storage = (e: StorageEvent) => {
+      if (e.key === 'papyrus-active-database') location.reload();
+    };
+    window.addEventListener('papyrus-database-switched', changed);
+    window.addEventListener('storage', storage);
+    return () => {
+      window.removeEventListener('papyrus-database-switched', changed);
+      window.removeEventListener('storage', storage);
+    };
+  }, []);
   return (
     <ErrorBoundary>
       <HashRouter>
-        <Application />
+        <RouteViewportReset />
+        <Application key={generation} />
       </HashRouter>
     </ErrorBoundary>
   );
 }
+function RouteViewportReset() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0 });
+  }, [pathname]);
+  return null;
+}
 function Application() {
+  const [storageReady, setStorageReady] = useState(false);
+  const [storageError, setStorageError] = useState('');
+  useEffect(() => {
+    let live = true;
+    void recoverInterruptedCutover()
+      .then(() => {
+        if (live) setStorageReady(true);
+      })
+      .catch((e) => {
+        if (live) setStorageError(String(e));
+      });
+    return () => {
+      live = false;
+    };
+  }, []);
   const children = useLiveQuery(() => db.children.toArray(), []);
   const allSessions = useLiveQuery(() => db.sessions.toArray(), []);
   const settingRows = useLiveQuery(() => db.settings.toArray(), []);
   const { childId, setChild, setTab } = useUI();
   const child = children?.find((c) => c.id === childId) ?? children?.[0];
+  useEffect(() => {
+    if (child) window.scrollTo({ top: 0, left: 0 });
+  }, [child?.id]);
   const events = useLiveQuery<BabyEvent[]>(
     () => (child ? db.events.where('childId').equals(child.id).toArray() : Promise.resolve([])),
     [child?.id],
@@ -77,6 +119,12 @@ function Application() {
   const [detail, setDetail] = useState<BabyEvent>();
   const [toast, setToast] = useState<{ text: string; undo?: () => Promise<void> } | null>(null);
   const notify = (text: string, undo?: () => Promise<void>) => setToast({ text, undo });
+  useEffect(() => {
+    const onError = (e: Event) =>
+      setToast({ text: 'Automatic backup needs attention: ' + String((e as CustomEvent).detail) });
+    window.addEventListener('papyrus-backup-error', onError);
+    return () => window.removeEventListener('papyrus-backup-error', onError);
+  }, []);
   const [online, setOnline] = useState(navigator.onLine);
   const [clockAlert, setClockAlert] = useState('');
   const landingLoaded = useRef(false);
@@ -160,7 +208,19 @@ function Application() {
     const id = setInterval(() => void tick(), 60000);
     return () => clearInterval(id);
   }, []);
-  if (!children || !allSessions || !settingRows || !events)
+  if (storageError)
+    return (
+      <main className="welcome">
+        <section className="card">
+          <h1>Your records remain saved.</h1>
+          <p role="alert">{storageError}</p>
+          <button className="button" onClick={() => location.reload()}>
+            Reopen safely
+          </button>
+        </section>
+      </main>
+    );
+  if (!storageReady || !children || !allSessions || !settingRows || !events)
     return (
       <div className="loading-screen">
         <Leaf size={36} />
@@ -174,6 +234,7 @@ function Application() {
   const otherSessions = allSessions.filter((s) => s.childId !== child.id);
   return (
     <Context.Provider value={{ child, children, events, sessions, settings, log, open, notify }}>
+      <BackupLifecycle />
       <div className="app-shell">
         <aside className="sidebar">
           <Link to="/" className="brand">
@@ -288,13 +349,7 @@ function Application() {
                 </button>
               </div>
             )}
-            {((!settings.lastBackup && events.length >= 10) ||
-              (!!settings.lastBackup &&
-                Date.now() - Number(settings.lastBackup) > 14 * 86400000)) && (
-              <Link className="backup-banner" to="/settings">
-                A little peace of mind: download a fresh backup of your memories.
-              </Link>
-            )}
+            <DataSafetyNotice />
             <Suspense fallback={<div className="card">Opening this chapter…</div>}>
               <Routes>
                 <Route path="/" element={<Home />} />

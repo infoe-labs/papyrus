@@ -1,3 +1,10 @@
+import { revisionMiddleware } from '../backup/database';
+import type {
+  BackupState,
+  DatabaseMetadata,
+  ChangeEntry,
+  ExternalDestination,
+} from '../backup/types';
 import Dexie, { type Table } from 'dexie';
 import { sleepIntervals } from './analytics';
 import { sessionSchema } from './schemas';
@@ -14,6 +21,11 @@ import {
   uid,
 } from './model';
 export class PapyrusDB extends Dexie {
+  metadata!: Table<DatabaseMetadata>;
+  backupState!: Table<BackupState>;
+  changeJournal!: Table<ChangeEntry>;
+  externalHandles!: Table<{ key: string; handle: ExternalDestination }>;
+  trackingEnabled = true;
   children!: Table<Child>;
   events!: Table<BabyEvent>;
   sessions!: Table<TrackingSession>;
@@ -43,9 +55,42 @@ export class PapyrusDB extends Dexie {
       events:
         'id,childId,category,start,[childId+start],[childId+category],provenance.sourceFingerprint,provenance.sourceKey',
     });
+    this.version(3).stores({
+      metadata: 'key',
+      backupState: 'key',
+      changeJournal: 'sequence,at,table',
+      externalHandles: 'key',
+    });
+    this.use({
+      stack: 'dbcore',
+      name: 'papyrus-revision-journal',
+      create: (down) => revisionMiddleware(down, () => this.trackingEnabled),
+    });
   }
 }
-export const db = new PapyrusDB();
+function initialDatabaseName() {
+  try {
+    return localStorage.getItem('papyrus-active-database') || 'papyrus';
+  } catch {
+    return 'papyrus';
+  }
+}
+export let db = new PapyrusDB(initialDatabaseName());
+export function activateDatabase(candidate: PapyrusDB) {
+  localStorage.setItem('papyrus-active-database', candidate.name);
+  db = candidate;
+  window.dispatchEvent(new Event('papyrus-database-switched'));
+}
+export async function ensureDatabaseMetadata(database = db) {
+  return database.transaction('rw', database.metadata, async () => {
+    let meta = await database.metadata.get('database');
+    if (!meta) {
+      meta = { key: 'database', id: uid(), revision: 0, journalEnabled: true };
+      await database.metadata.put(meta);
+    }
+    return meta;
+  });
+}
 export async function saveEvent(event: BabyEvent) {
   event = { ...event, data: { ...event.data } };
   eventSchema.parse(event);

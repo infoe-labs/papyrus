@@ -36,3 +36,7 @@ Manual iOS: install, airplane mode, terminate, suspend overnight, reboot, timezo
 ## Integrity rules
 
 No sample records inserted into personal data. No guessed growth curves. Unknown import fields remain unknown. CSV wall times use confirmed IANA timezone and explicit DST disambiguation. Reports exclude unfinished sessions. Active timers are rehydrated before dashboard display. Service workers cache code only, never delete records. Local notification scheduling is best effort while open. No cloud calls at runtime.
+
+## Backup architecture (schema v3)
+
+`src/backup/` owns real-schema snapshots, canonicalization, Web Crypto checksums, validation, staged restoration, media archives, encryption, state, adapters and UI. Database middleware adds transactionally ordered revisions and optional journal entries to every domain mutation. Portable snapshots omit file handles. A validated candidate database is activated through one localStorage pointer change, retaining the old database; a freeze lease recovers interrupted cutovers. Test restore uses isolated staging without activation. See [BACKUP.md](BACKUP.md).

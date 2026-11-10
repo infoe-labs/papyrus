@@ -4,7 +4,7 @@ import type { BabyEvent } from './model';
 // Provisional display records are never persisted or passed to completed analytics.
 export function useSleepDisplayRecords(events: BabyEvent[]) {
   const { sessions } = useApp();
-  const active = sessions.filter((s) => s.category === 'sleep');
+  const active = sessions.filter((s) => s.category === 'sleep' && !s.metadata.recoveryRequired);
   const [now, setNow] = useState(Date.now());
   useEffect(() => {
     if (!active.length) return;

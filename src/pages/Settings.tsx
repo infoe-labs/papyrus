@@ -1,11 +1,10 @@
+import { BackupSettings } from '../backup/components/BackupSettings';
 import { panelIds } from '../lib/panels';
 import { useEffect, useState, lazy, Suspense } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import {
   Settings2,
-  Download,
   Upload,
-  Shield,
   Plus,
   ArrowUp,
   ArrowDown,
@@ -18,7 +17,7 @@ import {
 import { useApp } from '../lib/context';
 import { categories, uid, type Category, type CustomDefinition, type Child } from '../lib/model';
 import { db, setSetting } from '../lib/db';
-import { tableNames, exportBackup, restoreBackup, validateBackup, download } from '../lib/backup';
+import { tableNames } from '../lib/backup';
 import { customSchema } from '../lib/schemas';
 import { names } from '../lib/fields';
 import { localInput } from '../lib/analytics';
@@ -37,12 +36,14 @@ export default function Settings() {
       ),
     );
   }, [storedSettings]);
-  const [importing, setImporting] = useState(false);
+  const [importing, setImporting] = useState(
+    () => sessionStorage.getItem('papyrus-onboarding-import') === 'true',
+  );
+  useEffect(() => {
+    sessionStorage.removeItem('papyrus-onboarding-import');
+  }, []);
   const [profile, setProfile] = useState<Child | 'new' | null>(null);
   const [storage, setStorage] = useState<StorageEstimate>();
-  const [restore, setRestore] = useState<ReturnType<typeof validateBackup>>();
-  const [restoreMode, setRestoreMode] = useState<'merge' | 'replace'>('merge');
-  const [media, setMedia] = useState(true);
   const [error, setError] = useState('');
   const [reminderName, setReminderName] = useState('');
   const [reminderCategory, setReminderCategory] = useState<Category>('bottle');
@@ -98,7 +99,7 @@ export default function Settings() {
           <h1>Make yourself at home.</h1>
           <p>Your family, your preferences, your data.</p>
         </div>
-        <span className="version-badge">Papyrus v0.1.0</span>
+        <span className="version-badge">Papyrus v0.2.0</span>
       </div>
       <div className="settings-grid">
         <div className="dashboard-stack">
@@ -158,98 +159,7 @@ export default function Settings() {
             </button>
             <p className="small muted">Local processing · timezone confirmation · review & audit</p>
           </section>
-          <section className="card">
-            <div className="card-heading">
-              <div>
-                <p className="eyebrow">A LITTLE PEACE OF MIND</p>
-                <h2>Back up your memories</h2>
-              </div>
-              <Shield size={22} />
-            </div>
-            <p className="muted">
-              Browser storage can be cleared by your device, browser settings, or removing the app.
-              A downloaded backup is your safeguard.
-            </p>
-            <p className="small">
-              Last backup:{' '}
-              {settings.lastBackup
-                ? new Date(Number(settings.lastBackup)).toLocaleString()
-                : 'No backup yet'}
-            </p>
-            <label className="check-label">
-              <input type="checkbox" checked={media} onChange={(e) => setMedia(e.target.checked)} />{' '}
-              Include locally stored photos
-            </label>
-            <button
-              className="button"
-              onClick={() =>
-                void run(async () => {
-                  download(
-                    `papyrus-backup-${new Date().toISOString().slice(0, 10)}.json`,
-                    await exportBackup(media),
-                  );
-                  notify('Backup downloaded. Keep it somewhere safe.');
-                })
-              }
-            >
-              <Download size={16} />
-              Download full backup
-            </button>
-            <div className="divider" />
-            <label className="upload-inline">
-              <Upload size={17} />
-              Restore a Papyrus backup
-              <input
-                type="file"
-                accept=".json,application/json"
-                onChange={(e) => {
-                  const f = e.target.files?.[0];
-                  if (f)
-                    void run(async () => {
-                      setRestore(validateBackup(JSON.parse(await f.text())));
-                    });
-                }}
-              />
-            </label>
-            {restore && (
-              <div className="restore-preview">
-                <h3>Review this backup</h3>
-                <p>
-                  {restore.children.length} children · {restore.events.length} events ·{' '}
-                  {restore.sessions.length} active timers · {restore.media.length} photos
-                </p>
-                <p className="small muted">
-                  Exported {new Date(restore.exportedAt).toLocaleString()}
-                </p>
-                <select
-                  value={restoreMode}
-                  onChange={(e) => setRestoreMode(e.target.value as typeof restoreMode)}
-                >
-                  <option value="merge">Merge safely · preserve existing IDs</option>
-                  <option value="replace">Replace ALL existing data</option>
-                </select>
-                <button
-                  className="button"
-                  onClick={() =>
-                    void run(async () => {
-                      if (
-                        restoreMode === 'replace' &&
-                        !confirm(
-                          'Replace all local data with this backup? Export your current data first.',
-                        )
-                      )
-                        return;
-                      await restoreBackup(restore, restoreMode);
-                      setRestore(undefined);
-                      notify('Backup restored successfully.');
-                    })
-                  }
-                >
-                  Confirm {restoreMode === 'replace' ? 'replacement' : 'merge'}
-                </button>
-              </div>
-            )}
-          </section>
+          <BackupSettings />
           <section className="card">
             <div className="card-heading">
               <h2>Storage & offline</h2>
@@ -731,7 +641,7 @@ export default function Settings() {
         </Suspense>
       )}
       <p className="page-footnote">
-        <Leaf size={13} /> Papyrus 0.1.0 · Your data belongs to you. Always.
+        <Leaf size={13} /> Papyrus 0.2.0 · Your data belongs to you. Always.
       </p>
     </>
   );

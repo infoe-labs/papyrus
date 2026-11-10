@@ -1,3 +1,4 @@
+import { runAutomaticBackup } from '../backup/automatic';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { X, Pencil, Copy, Trash2 } from 'lucide-react';
 import { useDialog } from '../lib/useDialog';
@@ -101,6 +102,7 @@ export default function EventDetails({
             onClick={async () => {
               if (!confirm('Delete this entry? You can undo immediately after deletion.')) return;
               try {
+                await runAutomaticBackup();
                 await db.events.delete(event.id);
                 onClose();
                 notify('Entry deleted.', async () => {

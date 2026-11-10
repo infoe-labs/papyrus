@@ -28,7 +28,7 @@ async function importFixture(page: Page) {
 }
 async function getEvents(page: Page) {
   return page.evaluate(async () => {
-    const request = indexedDB.open('papyrus');
+    const request = indexedDB.open(localStorage.getItem('papyrus-active-database') || 'papyrus');
     const database = await new Promise<IDBDatabase>((resolve, reject) => {
       request.onsuccess = () => resolve(request.result);
       request.onerror = () => reject(request.error);
@@ -47,7 +47,7 @@ for (const offline of [false, true])
   test(`synthetic eight-row migration and persistent timer ${offline ? 'offline' : 'online'}`, async ({
     page,
     context,
-  }) => {
+  }, testInfo) => {
     const errors: string[] = [];
     page.on('pageerror', (e) => errors.push(e.message));
     await child(page);
@@ -106,18 +106,28 @@ for (const offline of [false, true])
     await expect.poll(async () => (await getEvents(page)).length).toBe(9);
     await settings(page);
     const downloadPromise = page.waitForEvent('download');
-    await page.getByRole('button', { name: 'Download full backup', exact: true }).click();
+    await page.getByRole('button', { name: 'Back Up Now', exact: true }).click();
     const backup = await downloadPromise;
-    const backupPath = await backup.path();
+    const backupPath = testInfo.outputPath('synthetic-roundtrip-backup.json');
+    await backup.saveAs(backupPath);
     expect(backupPath).toBeTruthy();
     const repeated = await importFixture(page);
     await expect(repeated.getByText('Duplicates skipped', { exact: true })).toBeVisible();
     await repeated.getByRole('button', { name: 'Back to Papyrus', exact: false }).click();
     expect(await getEvents(page)).toHaveLength(9);
-    await page
-      .locator('input[type=file][accept=".json,application/json"]')
+    await page.getByRole('button', { name: 'Restore from Backup', exact: true }).click();
+    const restoreDialog = page.getByRole('dialog');
+    await restoreDialog
+      .getByLabel('Select external backup', { exact: true })
       .setInputFiles(backupPath!);
-    await page.getByRole('button', { name: 'Confirm merge', exact: true }).click();
+    await restoreDialog.getByRole('button', { name: 'Inspect file', exact: false }).click();
+    await restoreDialog.getByRole('button', { name: 'Review validation', exact: false }).click();
+    await restoreDialog.getByRole('button', { name: 'Test restore in isolation' }).click();
+    await restoreDialog.getByRole('button', { name: 'Choose restore mode' }).click();
+    await restoreDialog.getByLabel('Restore mode', { exact: true }).selectOption('merge');
+    await restoreDialog.getByRole('checkbox').check();
+    await restoreDialog.getByRole('button', { name: 'Confirm merge', exact: true }).click();
+    await expect(restoreDialog).not.toBeVisible();
     expect(await getEvents(page)).toHaveLength(9);
     await page.goto('./#/reports');
     await expect(
@@ -149,5 +159,9 @@ test('mobile and desktop stay within viewport and detailed diaper fields are con
     data: { type: 'mixed', color: 'green' },
     notes: 'Detailed observation',
   });
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= document.documentElement.clientWidth,
+    ),
+  ).toBe(true);
 });

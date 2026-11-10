@@ -1,3 +1,4 @@
+import { RecoveredTimer } from '../backup/components/RecoveredTimer';
 import { useEffect, useState } from 'react';
 import { Pause, Play, Square, Pencil, Trash2 } from 'lucide-react';
 import { useApp } from '../lib/context';
@@ -17,9 +18,13 @@ export function ActiveTimers() {
   const { sessions } = useApp();
   return sessions.length ? (
     <div className="active-grid">
-      {sessions.map((s) => (
-        <ActiveTimer key={s.id} session={s} />
-      ))}
+      {sessions.map((s) =>
+        s.metadata.recoveryRequired ? (
+          <RecoveredTimer key={s.id} session={s} />
+        ) : (
+          <ActiveTimer key={s.id} session={s} />
+        ),
+      )}
     </div>
   ) : null;
 }

@@ -320,6 +320,7 @@ export async function commitImport(
     }
     await db.imports.add({ id: uid(), at: Date.now(), file, count: imported });
   });
+  window.dispatchEvent(new Event('papyrus-significant-change'));
   return { imported, duplicates, skipped, warnings: rows.filter((r) => r.warnings.length).length };
 }
 /** Explicit registry-based remapping retains the original row and source fingerprint. */

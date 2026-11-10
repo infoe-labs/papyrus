@@ -285,10 +285,14 @@ describe('backup safeguards', () => {
     expect(await db.media.count()).toBe(1);
   });
   it('rejects unsupported, duplicate and orphaned records without changing existing data', async () => {
-    const b = (await exportBackup()) as Record<string, unknown>;
-    expect(() => validateBackup({ ...b, version: 99 })).toThrow();
-    expect(() => validateBackup({ ...b, children: [child, child] })).toThrow();
-    expect(() => validateBackup({ ...b, events: [makeEvent('missing', 'diaper')] })).toThrow();
+    const b = await exportBackup();
+    await expect(validateBackup({ ...b, formatVersion: 99 })).rejects.toThrow();
+    await expect(
+      validateBackup({ ...b, payload: { ...b.payload, children: [child, child] } }),
+    ).rejects.toThrow();
+    await expect(
+      validateBackup({ ...b, payload: { ...b.payload, events: [makeEvent('missing', 'diaper')] } }),
+    ).rejects.toThrow();
     expect(await db.children.count()).toBe(1);
   });
 });

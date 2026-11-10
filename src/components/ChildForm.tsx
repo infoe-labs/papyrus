@@ -1,3 +1,4 @@
+import { BackupSettings } from '../backup/components/BackupSettings';
 import { useState } from 'react';
 import { format } from 'date-fns';
 import { Check, Leaf } from 'lucide-react';
@@ -120,6 +121,7 @@ export function ChildForm({
   );
 }
 export function Welcome() {
+  const [importChoice, setImportChoice] = useState(false);
   return (
     <main className="welcome">
       <div className="welcome-brand">
@@ -136,12 +138,37 @@ export function Welcome() {
           Sleepy afternoons. Tiny firsts. All the details that make up a life. Keep them here,
           privately on your device.
         </p>
-        <ChildForm onSaved={() => {}} />
+        {importChoice && (
+          <p className="info">
+            Create the destination child's profile below. The CSV importer will open next.
+          </p>
+        )}
+        <ChildForm
+          onSaved={() => {
+            if (importChoice) {
+              sessionStorage.setItem('papyrus-onboarding-import', 'true');
+              location.hash = '/settings';
+            }
+          }}
+        />
         <p className="privacy-line">No account. No subscription. Just your family.</p>
       </section>
-      <p className="muted small">
-        Already have a backup? Create a profile first, then restore it in Settings.
-      </p>
+      <div className="welcome-recovery">
+        <BackupSettings compact />
+        <button
+          className="button secondary"
+          onClick={() => {
+            setImportChoice(true);
+            window.scrollTo({ top: 0, left: 0 });
+          }}
+        >
+          Import Huckleberry CSV
+        </button>
+        <p className="muted small">
+          To import Huckleberry CSV, create or select the destination child profile above, then open
+          Settings → Import. No empty child profile is fabricated.
+        </p>
+      </div>
     </main>
   );
 }

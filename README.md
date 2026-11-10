@@ -45,11 +45,13 @@ Identical reimports skip existing source fingerprints, including records subsequ
 
 ## Backup and restore
 
-Use **Settings → Download full backup**. Versioned JSON includes all profiles, events, active timers, settings, schedules, plan versions, progress, reminders, custom definitions, import provenance and optional local photos. Photos are embedded as data URLs. Keep the downloaded file somewhere safe. A backup contains personal information; choose where you store/share it.
+Use **Settings → Data Safety → Back Up Now**. Save the dated file outside browser storage. Ordinary backups are validated JSON; backups containing photos use a checksummed ZIP archive. Optional password encryption is available. A download initiation is not proof that a file was saved: the UI separately records your confirmation and external-file verification.
 
-Restore a JSON file in Settings, review its counts, then choose merge or replacement. Merge preserves existing IDs and user edits. Replacement requires explicit confirmation. Validation checks supported version, tables/types, duplicate IDs, child relationships, event intervals and timer conflicts before writing. Writes are transactional. Invalid data or a write failure rolls back. Unsupported future backup versions are rejected rather than partially restored.
+**Test Backup** verifies an external file and stages a complete test restore without changing your live records. Restore offers preview, merge with conflict review, or explicitly confirmed replacement. Candidates are validated in a separate database before cutover; the existing database is retained as a safety point. Recovered unfinished timers require review.
 
-Browser storage is **not guaranteed permanent**. Browser cleanup, private browsing, storage pressure or removing an app can remove local records. Storage estimates and a persistent-storage request are available in Settings. Papyrus records the last backup date and displays backup reminders. Backups and restores work offline.
+Where folder access is supported, authorize a destination for rotating backups while the app is open. New dated files are read back and verified before older generations are retired; at least three verified generations are retained when available. A single-file destination is never continuously overwritten. Manual export works on iOS and Android without these APIs.
+
+Browser storage is **not guaranteed permanent**. Keep external backups and test them regularly. See [the recovery guide](docs/BACKUP.md) for platform workflows, integrity format, failure handling, encryption and limits. All core backup and restore operations work offline while application assets remain available.
 
 ## Offline installation on iPhone
 
@@ -73,7 +75,7 @@ VITE_BASE_PATH=/papyrus/ npm run build
 TEST_BASE_PATH=/papyrus/ npm run test:e2e
 ```
 
-No deployment was executed from this workspace. A normal push/workflow run deploys after checks, provided Pages is enabled and the repository has the necessary GitHub permissions.
+Live application: **https://infoe-labs.github.io/papyrus/**. GitHub Pages is enabled, and the workflow deploys after its checks pass. The public HTTPS origin has been checked for service-worker control and offline timer persistence.
 
 Updates download in the background and present an update prompt. Accept when ready. User records and timers are already persistent; updates replace code caches only. Refresh the deployed app online once to receive a new version.
 

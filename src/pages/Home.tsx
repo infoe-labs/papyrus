@@ -36,7 +36,7 @@ export default function Home() {
       }),
     [child, events, settings],
   );
-  const sleep = sessions.find((s) => s.category === 'sleep');
+  const sleep = sessions.find((s) => s.category === 'sleep' && !s.metadata.recoveryRequired);
   const panels = (settings.panels as string[] | undefined) ?? [
     'prediction',
     'totals',
