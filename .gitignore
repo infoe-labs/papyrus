@@ -1,0 +1,25 @@
+node_modules
+dist
+playwright-report
+test-results
+*.tsbuildinfo
+
+# Never publish local credentials, personal exports, backups or browser profiles.
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.csv
+!tests/fixtures/huckleberry-synthetic.csv
+*backup*.json
+*import-audit*.json
+backups/
+exports/
+private/
+.local/
+.openai/
+blob-report/
+playwright/.auth/

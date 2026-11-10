@@ -1,0 +1,47 @@
+{
+  "retrieved": "2026-11-09",
+  "reference": "WHO Child Growth Standards, CDC published LMS tables birth to 24 months",
+  "method": "LMS Box-Cox; linear interpolation of published monthly age or 0.5cm length LMS parameters, no extrapolation. Birth to 24 months, 45\u2013110cm for weight-for-length. Corrected age opt-in for birth <37 weeks and chronological age <=24 months. No extreme percentiles beyond \u00b13 z. Standing height is not assessed against recumbent length.",
+  "sources": [
+    {
+      "url": "https://ftp.cdc.gov/pub/Health_Statistics/NCHS/growthcharts/WHO-Boys-Weight-for-age-Percentiles.csv",
+      "sha256": "392a200620f752becf580fc73d4e9bf939e68bd9f1fcd8ad64a707a9950027df",
+      "rows": 25
+    },
+    {
+      "url": "https://ftp.cdc.gov/pub/Health_Statistics/NCHS/growthcharts/WHO-Boys-Length-for-age-Percentiles.csv",
+      "sha256": "2f920b4f0afb14beb8444b4e82c4ea74d43330ef976a41a3bf87078157727dde",
+      "rows": 25
+    },
+    {
+      "url": "https://ftp.cdc.gov/pub/Health_Statistics/NCHS/growthcharts/WHO-Boys-Head-Circumference-for-age-Percentiles.csv",
+      "sha256": "fc469d9d47d3956a41bd6428ae44ecb4f0c87dd38c4bafe610e3f8cddeb480e9",
+      "rows": 25
+    },
+    {
+      "url": "https://ftp.cdc.gov/pub/Health_Statistics/NCHS/growthcharts/WHO-Boys-Weight-for-length-Percentiles.csv",
+      "sha256": "f1709fb9eff45d03775c109573082d9f6180902b0ab36fadbdcf727f384852c1",
+      "rows": 131
+    },
+    {
+      "url": "https://ftp.cdc.gov/pub/Health_Statistics/NCHS/growthcharts/WHO-Girls-Length-for-age-Percentiles.csv",
+      "sha256": "a93c3f942049b0210f886fa97ea665d7c4a4c25da5f1d634aa14f85e6ee49c85",
+      "rows": 25
+    },
+    {
+      "url": "https://ftp.cdc.gov/pub/Health_Statistics/NCHS/growthcharts/WHO-Girls-Head-Circumference-for-age-Percentiles.csv",
+      "sha256": "4c93648bca275019f68cb6f66e862a43a5bab01ae0df3995f9879a6300a0de66",
+      "rows": 25
+    },
+    {
+      "url": "https://ftp.cdc.gov/pub/Health_Statistics/NCHS/growthcharts/WHO-Girls-Weight-for-length-Percentiles.csv",
+      "sha256": "184de1917ccbc910551de3ddce41479670984d517f14df483a401cb351c7da6c",
+      "rows": 131
+    },
+    {
+      "url": "https://ftp.cdc.gov/pub/Health_Statistics/NCHS/growthcharts/WHO-Girls-Weight-for-age%20Percentiles.csv",
+      "sha256": "9b22e3cb5885da7bc789febfce8d29eeb76c4e3a3da26103d663ad3079e214b7",
+      "rows": 25
+    }
+  ]
+}
